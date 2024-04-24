@@ -179,7 +179,7 @@ class GPT2(nn.Module):
 
 def main():
     encoder = tiktoken.get_encoding("gpt2")
-    vocab_size = encoder.max_token_value
+    vocab_size = encoder.max_token_value + 1
 
     block_size = 128 # max sequence length
     num_embed = 384

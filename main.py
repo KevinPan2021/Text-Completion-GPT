@@ -84,7 +84,13 @@ class LargeTextDataset(Dataset):
         return x, y
 
         
-            
+
+def inference(model, tokenizer, max_new_tokens=100):
+    context = torch.zeros((1,1), dtype=torch.long).to(GPU_Device())
+    generated = model.generate(context, max_new_tokens=max_new_tokens)[0].tolist()
+    generated = tokenizer.decode(generated)
+    return generated
+
             
 def main():
     # file path
@@ -133,9 +139,7 @@ def main():
     model.load_state_dict(torch.load(f'{type(model).__name__}.pth'))
     
     # generate
-    context = torch.zeros((1,1), dtype=torch.long).to(GPU_Device())
-    generated = model.generate(context, max_new_tokens=500)[0].tolist()
-    generated = tokenizer.decode(generated)
+    generated = inference(model, tokenizer)
     print(generated)
     
     
