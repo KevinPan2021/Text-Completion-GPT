@@ -1,5 +1,5 @@
 Introduction:
-	This project aims to preform Text Generation using Decoder only Transformer (GPT2).
+	This project aims to preform Text Generation using Decoder only Transformer (GPT2). This serves as the foundation for fine-tuning GPT on Question and Answering Tasks and later few shots learning (GPT3).
 
 
 
@@ -28,8 +28,7 @@ Generate ".py" file from ".ui" file:
 Core Project Structure:
 	GUI.py (Run to generate a GUI)
 	main.py (Run to train model)
-	model_transformer.py
-	model_attention.py
+	model_GPT2.py
 	qt_main.py
 	training.py
 	visualization.py
