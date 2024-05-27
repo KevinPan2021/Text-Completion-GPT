@@ -1,146 +1,87 @@
 import torch
+from torch.nn import functional as F
 import tiktoken
-from torch.utils.data import Dataset, DataLoader
-import os
-import numpy as np
-from tqdm import tqdm
 
+from model_converter import load_from_standard_weights
+from gpt import GPT2
 
-from model_GPT2 import GPT2
-from training import model_training
 
 # supports MacOS mps and CUDA
-def GPU_Device():
+def compute_device():
     if torch.cuda.is_available():
         return 'cuda'
     elif torch.backends.mps.is_available():
         return 'mps'
+    else:
+        return 'cpu'
 
 
-def batch_tokenize_lines(input_path, batch_size, max_lines):
-    with open(input_path, 'r', encoding='utf-8') as text_file:
-        i = 0
-        lines = []
-        for line in text_file:
-            lines.append(line)
-            if len(lines) >= batch_size:
-                yield lines
-                lines = []
-            if max_lines!=None and i > max_lines:
-                break
-            i += 1
-        if lines:
-            yield lines
-
-
-# convert from text file to binary file
-def convert_to_tokenized_binary(input_path, output_path, tokenizer, max_lines=3e5, batch_size=1000):
-    with open(output_path, 'ab') as file:
-        for batch in tqdm(batch_tokenize_lines(input_path, batch_size, max_lines)):
-            token_values_batch = []
-            for line in batch:
-                token_values = tokenizer.encode_ordinary(line)
-                token_values_batch.extend(token_values)
-            token_values_batch = np.array(token_values_batch).astype(np.ushort)
-            token_values_batch.tofile(file)
-            
-            
-
-class LargeTextDataset(Dataset):
-    def __init__(self, file_path, seq_length):
-        self.file_path = file_path
-        self.seq_length = seq_length
-        self.num_tokens = None
-        
-        # Open the file and get the number of tokens
-        with open(file_path, 'rb') as file:
-            file.seek(0, 2)
-            self.num_tokens = np.int64(file.tell()) // 2  # Each token is stored as ushort
-        
+@torch.no_grad()
+def inference(model, tokenizer, input_sentence, max_new_tokens=512, 
+              temperature=1.0, top_k=None):
+    model = model.eval()
     
-    def get_num_tokens(self):
-        return self.num_tokens
+    # encode string to list
+    input_tok = tokenizer.encode(input_sentence)
     
+    # convert to tensor
+    input_tok = torch.tensor(input_tok, dtype=torch.long)
     
-    def __len__(self):
-        return self.num_tokens // (self.seq_length)
+    # unsqueeze the batch dimension
+    input_tok = input_tok.unsqueeze(0)
     
+    # move to compute device
+    idx = input_tok.to(compute_device())
     
-    def __getitem__(self, idx):
-        # Calculate the offset in the file for the given index
-        offset = idx * (self.seq_length) * 2  # 2 bytes per token
+    # generate
+    # idx is (B, T) array of indices in the current context
+    for _ in range(max_new_tokens):
+        # crop idx to the last block_size tokens
+        idx_cond = idx[:, -1024:]
+       # forward the model to get the logits for the index in the sequence
+        logits, _ = model(idx_cond)
+        # pluck the logits at the final step and scale by desired temperature
+        logits = logits[:, -1, :] / temperature
+        # optionally crop the logits to only the top k options
+        if top_k is not None:
+            v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+            logits[logits < v[:, [-1]]] = -float('Inf')
+        # apply softmax to convert logits to (normalized) probabilities
+        probs = F.softmax(logits, dim=-1)
+        # sample from the distribution
+        idx_next = torch.multinomial(probs, num_samples=1)
+        # append sampled index to the running sequence and continue
+        idx = torch.cat((idx, idx_next), dim=1)
         
-        # Read the data from the file
-        with open(self.file_path, 'rb') as file:
-            file.seek(offset)
-            data = np.fromfile(file, dtype=np.ushort, count=self.seq_length)
-        
-        # Convert to PyTorch tensor
-        data = data.astype(np.int32)
-        data_tensor = torch.tensor(data, dtype=torch.long)
-        
-        x = data_tensor[:-1]
-        y = data_tensor[1:]
-        return x, y
-
-        
-
-def inference(model, tokenizer, max_new_tokens=100):
-    context = torch.zeros((1,1), dtype=torch.long).to(GPU_Device())
-    generated = model.generate(context, max_new_tokens=max_new_tokens)[0].tolist()
-    generated = tokenizer.decode(generated)
+    generated = idx[0].tolist()
+    
+    # decode
+    generated = tokenizer.decode(generated)[len(input_sentence):]
+    
     return generated
+
 
             
 def main():
-    # file path
-    file_path = '../Datasets/OpenWebText/'
+    # create GPT model
+    # load model
+    num_embed = 768
+    num_heads = 12
+    num_layers = 12
+    model = GPT2(num_embed, num_heads, num_layers)
+    model = model.to(compute_device())
     
+    # load the pretained weights
+    pretrained_path = '../pretrained_models/GPT/GPT2.bin'
+    model.load_state_dict(load_from_standard_weights(pretrained_path))
+
     # tokenizer
     tokenizer = tiktoken.get_encoding("gpt2")
     
-    # building the vocab
-    vocab_size = tokenizer.max_token_value + 1
-    
-    # convert from raw text file to tokenized binary file
-    train_txt_file = file_path + 'train_split.txt'
-    train_bin_file = 'train.bin'
-    valid_txt_file = file_path + 'val_split.txt'
-    valid_bin_file = 'valid.bin'
-    if train_bin_file not in os.listdir():
-        # load the first 300,000 lines
-        convert_to_tokenized_binary(train_txt_file, train_bin_file, tokenizer, max_lines=3e5)
-    if valid_bin_file not in os.listdir():
-        # load the first 30,000 lines
-        convert_to_tokenized_binary(valid_txt_file, valid_bin_file, tokenizer, max_lines=3e4)
-    
-    
-    # Define train and valid data loader
-    batch_size = 64
-    block_size = 64 # max sequence length
-    train_dataset = LargeTextDataset(train_bin_file, block_size)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    valid_dataset = LargeTextDataset(valid_bin_file, block_size)
-    valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
-    
-
-    # load model
-    num_embed = 384
-    num_heads = 6
-    num_layers = 6
-    dropout = 0.2
-    model = GPT2(vocab_size, block_size, num_embed, num_heads, num_layers, dropout)
-    model = model.to(GPU_Device()) # move the model to device
-    
-    # model training
-    model_training(model, train_loader, valid_loader, GPU_Device())
-    
-    # loading the best model
-    model.load_state_dict(torch.load(f'{type(model).__name__}.pth'))
-    
-    # generate
-    generated = inference(model, tokenizer)
-    print(generated)
+    # inference
+    input_sentence = 'Once upon a time, '
+    generated = inference(model, tokenizer, input_sentence)
+    print(input_sentence + generated)
     
     
 if __name__ == '__main__':

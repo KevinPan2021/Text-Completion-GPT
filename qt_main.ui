@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>810</width>
-    <height>600</height>
+    <width>1000</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>810</width>
-    <height>600</height>
+    <width>1000</width>
+    <height>800</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>810</width>
-    <height>600</height>
+    <width>1000</width>
+    <height>800</height>
    </size>
   </property>
   <property name="mouseTracking">
@@ -37,14 +37,14 @@
   <widget class="QWidget" name="centralwidget">
    <property name="minimumSize">
     <size>
-     <width>810</width>
-     <height>600</height>
+     <width>1000</width>
+     <height>800</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
-     <width>810</width>
-     <height>600</height>
+     <width>1000</width>
+     <height>800</height>
     </size>
    </property>
    <property name="mouseTracking">
@@ -62,11 +62,14 @@
          <widget class="QLabel" name="label_3">
           <property name="font">
            <font>
-            <pointsize>16</pointsize>
+            <pointsize>12</pointsize>
            </font>
           </property>
+          <property name="styleSheet">
+           <string notr="true">color:white</string>
+          </property>
           <property name="text">
-           <string>Generated Text</string>
+           <string>Text</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -77,18 +80,19 @@
          <widget class="QTextEdit" name="textEdit_GeneratedText">
           <property name="minimumSize">
            <size>
-            <width>800</width>
-            <height>440</height>
+            <width>980</width>
+            <height>630</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>800</width>
-            <height>440</height>
+            <width>980</width>
+            <height>630</height>
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">background-color: rgb(56, 64, 85);</string>
+           <string notr="true">background-color: rgb(56, 64, 85);
+color:white</string>
           </property>
          </widget>
         </item>
@@ -111,6 +115,9 @@
         </item>
         <item>
          <widget class="QLabel" name="label_6">
+          <property name="styleSheet">
+           <string notr="true">color:white</string>
+          </property>
           <property name="text">
            <string>Model</string>
           </property>
@@ -155,6 +162,55 @@ QComboBox:disabled {
          </widget>
         </item>
         <item>
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_7">
+          <property name="styleSheet">
+           <string notr="true">color:white</string>
+          </property>
+          <property name="text">
+           <string>Generated Length</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_length">
+          <property name="minimumSize">
+           <size>
+            <width>100</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(56, 64, 85);
+color: white;</string>
+          </property>
+          <property name="text">
+           <string>256</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_3">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -172,22 +228,55 @@ QComboBox:disabled {
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QToolButton" name="toolButton_process">
+         <widget class="QToolButton" name="toolButton_clear">
           <property name="minimumSize">
            <size>
-            <width>100</width>
-            <height>38</height>
+            <width>120</width>
+            <height>45</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>100</width>
-            <height>38</height>
+            <width>120</width>
+            <height>45</height>
            </size>
           </property>
           <property name="font">
            <font>
-            <pointsize>14</pointsize>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QToolButton {
+	color:white; 
+	background:qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, 		stop:0 rgba(32, 38, 52, 255), 
+		stop:1 rgba(91, 99, 120, 255));
+	border: 2px solid black;
+	border-radius: 8px;
+}</string>
+          </property>
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QToolButton" name="toolButton_process">
+          <property name="minimumSize">
+           <size>
+            <width>120</width>
+            <height>45</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>120</width>
+            <height>45</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>8</pointsize>
            </font>
           </property>
           <property name="styleSheet">
