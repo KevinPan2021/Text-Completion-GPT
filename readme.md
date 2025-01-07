@@ -18,11 +18,8 @@ This project aims to preform Text Generation using Decoder only Transformer (GPT
 ### Python Packages:
 
 	conda install pytorch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 pytorch-cuda=12.1 -c pytorch -c nvidia
-	conda install -c conda-forge pandas = 1.5.3
-	conda install -c conda-forge tqdm = 4.64.1
-	conda install -c conda-forge matplotlib = 3.8.0
 	conda install -c conda-forge numpy = 1.26.4
-
+	pip install tiktoken
 
 
 ### Code Structure:

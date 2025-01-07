@@ -6,12 +6,10 @@ from model_converter import load_from_standard_weights
 from gpt import GPT2
 
 
-# supports MacOS mps and CUDA
+# CUDA or CPU
 def compute_device():
     if torch.cuda.is_available():
         return 'cuda'
-    elif torch.backends.mps.is_available():
-        return 'mps'
     else:
         return 'cpu'
 
